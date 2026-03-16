@@ -233,7 +233,7 @@ function openExportModal() {
         routes.add(`${b.scheduleId.origin} → ${b.scheduleId.destination}`);
       }
     });
-    routeSelect.innerHTML = '<option value="">All Routes</option>';
+    routeSelect.innerHTML = '<option value="">All Cab Routes</option>';
     routes.forEach(r => {
       const opt = document.createElement('option');
       opt.value = r; opt.textContent = r;
@@ -340,7 +340,7 @@ function downloadExcel(bookings) {
 
   const a = document.createElement('a');
   a.href = url;
-  a.download = `SRT_Bookings_${new Date().toISOString().split('T')[0]}.csv`;
+  a.download = `SRT_Taxi_Bookings_${new Date().toISOString().split('T')[0]}.csv`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -621,7 +621,7 @@ async function busDeleteAction(action) {
         <div style="display:flex;align-items:center;justify-content:space-between;padding:0.5rem 0.75rem;background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:0.4rem;">
           <div>
             <span style="font-weight:600;font-size:0.875rem;color:#1e293b;">${dateStr}</span>
-            <span style="font-size:0.78rem;color:#667eea;margin-left:0.5rem;">@ ${timeStr}</span>
+            <span style="font-size:0.78rem;color:#f59e0b;margin-left:0.5rem;">@ ${timeStr}</span>
           </div>
           <button onclick="deleteSingleDateFromGroup('${id}', this)"
             style="padding:0.25rem 0.65rem;background:#fee2e2;color:#dc2626;border:1px solid #fecaca;border-radius:6px;font-size:0.78rem;font-weight:600;cursor:pointer;">
@@ -890,6 +890,7 @@ function resetRoutePricing() {
 
 function resetAllPricing() {
   if (confirm('⚠️ Reset ALL pricing to system defaults?')) {
+    localStorage.removeItem('routePricing_taxi_v1');
     localStorage.removeItem('routePricing_v2');
     localStorage.removeItem('routePricing');
     showToast('All pricing reset','success');
@@ -905,13 +906,14 @@ function resetAllPricing() {
 // ─────────────────────────────────────────
 function switchAdminTab(tabName, event) {
   document.querySelectorAll('.admin-tab-content').forEach(t => t.classList.remove('active'));
-  const tab = document.getElementById(`tab-${tabName}`);
+  const tabId = tabName === 'cablists' ? 'tab-cablists' : `tab-${tabName}`;
+  const tab = document.getElementById(tabId);
   if (tab) tab.classList.add('active');
   document.querySelectorAll('.admin-tab-btn').forEach(b => b.classList.remove('active'));
   if (event?.target) event.target.classList.add('active');
   if (tabName === 'pricing')  loadRouteSelector();
   if (tabName === 'bookings') loadBookingsTable();
-  if (tabName === 'buslists') loadBusListTable();
+  if (tabName === 'cablists') loadBusListTable();
   if (tabName === 'coupons')  loadCouponsTable();
 }
 
@@ -1123,12 +1125,12 @@ function renderBusListTable(schedules) {
 
     return `
     <tr>
-      <td><div><strong>${s.busName}</strong></div><div class="text-muted" style="font-size:0.75rem;">${s.type}</div></td>
+      <td><div style="display:flex;align-items:center;gap:.3rem;font-weight:700;">${s.type.includes("SUV") ? "🚙" : "🚗"} <span>${s.busName}</span></div><div style="font-size:.72rem;color:#f59e0b;font-weight:600;background:#fffbeb;border:1px solid #fde68a;border-radius:999px;padding:.1rem .5rem;display:inline-block;margin-top:.2rem;">${s.type}</div></td>
       <td>${s.origin} → ${s.destination}</td>
       <td style="font-size:0.78rem;color:#475569;">${s.pickupPoint || '—'}<br>${s.dropPoint || '—'}</td>
       <td>
         <div style="font-size:0.85rem;">${dateLabel}</div>
-        <small style="color:#667eea;font-weight:600;">${toISTTimeString(new Date(s.departureTime))} &nbsp;·&nbsp; ${group.schedules.length} day${group.schedules.length > 1 ? 's' : ''}</small>
+        <small style="color:#f59e0b;font-weight:600;">${toISTTimeString(new Date(s.departureTime))} &nbsp;·&nbsp; ${group.schedules.length} day${group.schedules.length > 1 ? 's' : ''}</small>
       </td>
       <td><span style="background:#eff6ff;color:#3b82f6;padding:0.15rem 0.4rem;border-radius:4px;font-size:0.78rem;">⏱ ${dur}</span></td>
       <td>${formatCurrency(s.price)}</td>

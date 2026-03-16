@@ -3,893 +3,639 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Panel - Shree Ram Taxi</title>
-  <link rel="icon" href="assets/icons/favicon.ico">
+  <title>Admin Panel — Shree Ram Taxi</title>
+  <link rel="icon" href="assets/icons/shree-ram-logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/tailwind.css">
   <style>
-    /* ── Login modal blur overlay ── */
-    #admin-login-modal {
-      position: fixed;
-      inset: 0;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 9999;
-      /* frosted-glass backdrop */
-      background: rgba(15, 23, 42, 0.55);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-    }
-    #admin-login-modal.active { display: flex; }
-
-    .modal-content {
-      background: white;
-      padding: 2.5rem 2rem;
-      border-radius: 16px;
-      box-shadow: 0 24px 64px rgba(0,0,0,0.35);
-      max-width: 90%;
-      width: 400px;
-      animation: modalPop 0.25s ease;
-    }
-    @keyframes modalPop {
-      from { transform: scale(0.92); opacity: 0; }
-      to   { transform: scale(1);    opacity: 1; }
-    }
-
-    .modal-logo {
-      display: flex;
-      justify-content: center;
-      margin-bottom: 1.25rem;
-    }
-    .lock-icon {
-      width: 56px; height: 56px;
-      background: linear-gradient(135deg,#667eea,#764ba2);
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1.6rem;
-      box-shadow: 0 4px 16px rgba(102,126,234,0.4);
-    }
-
-    /* ── Hide page content COMPLETELY until authenticated — no dashboard flash ── */
-    .admin-page-content { visibility: hidden; }
-    body.admin-authed .admin-page-content { visibility: visible; }
-
-    /* ── Route Selector ── */
-    #route-selector {
-      width: 100%; padding: 0.75rem;
-      font-size: 1rem; border: 2px solid #e5e7eb;
-      border-radius: 8px; background: white; transition: all 0.2s;
-    }
-    #route-selector:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
-
-    #pricing-status .alert { padding: 1rem; border-radius: 8px; margin-bottom: 0; }
-    #pricing-status .alert-info     { background: #dbeafe; border: 1px solid #93c5fd; color: #1e40af; }
-    #pricing-status .alert-secondary{ background: #f3f4f6; border: 1px solid #d1d5db; color: #374151; }
-
-    .pricing-info-box {
-      background: linear-gradient(135deg,#667eea,#764ba2);
-      color: white; padding: 1.5rem; border-radius: 12px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-top: 1rem;
-    }
-    .pricing-info-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; font-size: 1rem; font-weight: 600; }
-    .pricing-info-header .badge { padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; }
-    .badge-success   { background: #10b981; color: white; }
-    .badge-secondary { background: rgba(255,255,255,0.2); color: white; }
-
-    .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(280px,1fr)); gap: 1.5rem; margin-bottom: 1rem; }
-    .pricing-item { display: flex; flex-direction: column; gap: 0.25rem; }
-    .pricing-label { font-size: 0.875rem; opacity: 0.9; }
-    .pricing-value { font-size: 1.5rem; font-weight: 700; }
-    .pricing-note  { padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.2); opacity: 0.9; font-size: 0.875rem; }
-
-    .pricing-card { border-radius: 12px; padding: 1.5rem; border: 2px solid; transition: all 0.3s ease; }
-    .pricing-card:hover { transform: translateY(-4px); box-shadow: 0 8px 16px rgba(0,0,0,0.1); }
-    .pricing-card-blue   { background: #eff6ff; border-color: #3b82f6; }
-    .pricing-card-gray   { background: #f9fafb; border-color: #6b7280; }
-    .pricing-card-green  { background: #f0fdf4; border-color: #10b981; }
-    .pricing-card-orange { background: #fffbeb; border-color: #f59e0b; }
-
-    .pricing-card-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid rgba(0,0,0,0.1); }
-    .pricing-icon { font-size: 1.5rem; }
-    .pricing-card-header h4 { margin: 0; font-size: 1.125rem; font-weight: 600; }
-    .pricing-card-body label { display: block; margin-bottom: 0.5rem; font-weight: 500; font-size: 0.875rem; }
-
-    .pricing-input { width: 100%; padding: 0.75rem; font-size: 1.25rem; font-weight: 600; border: 2px solid #e5e7eb; border-radius: 8px; text-align: center; transition: all 0.2s; }
-    .pricing-input:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
-    .pricing-help    { display: block; margin-top: 0.5rem; font-size: 0.75rem; color: #6b7280; line-height: 1.4; }
-    .pricing-example { margin-top: 0.75rem; padding: 0.5rem; background: rgba(0,0,0,0.05); border-radius: 6px; font-size: 0.875rem; font-style: italic; text-align: center; }
-
-    .pricing-preview { margin: 2rem 0; padding: 1.5rem; background: linear-gradient(135deg,#f9fafb,#ffffff); border-radius: 12px; border: 2px solid #e5e7eb; }
-
-    .alert { padding: 1rem; border-radius: 6px; margin-bottom: 1rem; }
-    .alert-info { background: #eff6ff; border-left: 4px solid #3b82f6; color: #1e40af; }
-    .alert strong { display: block; margin-bottom: 0.5rem; }
-
-    .form-actions { display: flex; gap: 1rem; justify-content: center; margin-top: 2rem; padding-top: 2rem; border-top: 2px solid #e5e7eb; flex-wrap: wrap; }
-
-    .btn { padding: 0.75rem 1.5rem; border-radius: 6px; font-weight: 500; cursor: pointer; border: none; transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 0.5rem; }
-    .btn-primary   { background: linear-gradient(135deg,#667eea,#764ba2); color: white; }
-    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(102,126,234,0.4); }
-    .btn-secondary { background: #6b7280; color: white; }
-    .btn-secondary:hover { background: #4b5563; }
-    .btn-outline   { background: white; border: 2px solid #e5e7eb; color: #374151; }
-    .btn-outline:hover { border-color: #667eea; color: #667eea; }
-    .btn-success   { background: #10b981; color: white; }
-    .btn-success:hover { background: #059669; transform: translateY(-1px); }
-    .btn-block { width: 100%; justify-content: center; }
-
-    .card { background: white; padding: 2rem; border-radius: 0.75rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-    .card-header h3 { font-size: 1.25rem; font-weight: 600; color: var(--secondary); margin-bottom: 0.5rem; }
-    .card-description { color: var(--slate-600); margin-bottom: 1.5rem; font-size: 0.875rem; }
-    .card-body { margin-top: 1rem; }
-    .form-group { margin-bottom: 1.5rem; }
-    .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--secondary); }
-    .form-control { width: 100%; padding: 0.75rem; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 1rem; transition: all 0.2s; }
-    .form-control:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
-    .form-help { display: block; margin-top: 0.5rem; font-size: 0.875rem; color: #6b7280; }
-
-    .tab-header { margin-bottom: 2rem; }
-    .tab-header h2 { font-size: 1.75rem; font-weight: 700; color: var(--secondary); margin-bottom: 0.5rem; }
-    .tab-description { color: var(--slate-600); font-size: 1rem; }
-    .required { color: #ef4444; }
-
-    /* Download Excel button area */
-    .bookings-toolbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 1rem;
-      margin-bottom: 1.25rem;
-    }
-
-    /* Export modal */
-    #export-modal {
-      position: fixed; inset: 0; z-index: 9998;
-      display: none; align-items: center; justify-content: center;
-      background: rgba(15,23,42,0.5);
-      backdrop-filter: blur(6px);
-    }
-    #export-modal.active { display: flex; }
-    .export-modal-box {
-      background: white; border-radius: 16px;
-      padding: 2rem; width: 420px; max-width: 94vw;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.25);
-      animation: modalPop 0.2s ease;
-    }
-    .export-modal-box h3 { font-size: 1.2rem; font-weight: 700; margin-bottom: 0.25rem; }
-    .export-modal-box p  { color: #6b7280; font-size: 0.875rem; margin-bottom: 1.5rem; }
-    .export-option { display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.5rem; }
-    .export-option label {
-      display: flex; align-items: flex-start; gap: 0.75rem;
-      padding: 0.875rem 1rem; border: 2px solid #e5e7eb;
-      border-radius: 10px; cursor: pointer; transition: all 0.2s;
-    }
-    .export-option label:hover { border-color: #667eea; background: #f5f3ff; }
-    .export-option input[type=radio] { margin-top: 3px; accent-color: #667eea; }
-    .export-option .opt-label { font-weight: 600; font-size: 0.9rem; color: #1e293b; }
-    .export-option .opt-desc  { font-size: 0.8rem; color: #64748b; }
-    #export-filter-fields { display: none; margin-bottom: 1rem; }
-    #export-filter-fields.visible { display: block; }
-
-    @media(max-width:768px){
-      .pricing-grid { grid-template-columns: 1fr; }
-      .form-actions { flex-direction: column; }
-      .form-actions button { width: 100%; }
-      .bookings-toolbar { flex-direction: column; align-items: flex-start; }
-
-      /* Horizontal scroll for all admin tables on mobile */
-      .table-container {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        border-radius: 10px;
-      }
-      .table {
-        min-width: 680px;
-        width: 100%;
-      }
-    }
-
-    /* ── Bus list table: prevent overflow, wrap long pickup/drop text ── */
-    #buslist-table-body td {
-      white-space: normal;
-      word-break: break-word;
-      overflow-wrap: break-word;
-      vertical-align: top;
-      padding-top: 0.7rem;
-    }
-    #tab-buslists .table {
-      table-layout: fixed;
-      width: 100%;
-    }
-    #tab-buslists .table th:nth-child(1) { width: 14%; }
-    #tab-buslists .table th:nth-child(2) { width: 12%; }
-    #tab-buslists .table th:nth-child(3) { width: 22%; }
-    #tab-buslists .table th:nth-child(4) { width: 18%; }
-    #tab-buslists .table th:nth-child(5) { width: 9%;  }
-    #tab-buslists .table th:nth-child(6) { width: 8%;  }
-    #tab-buslists .table th:nth-child(7) { width: 17%; }
-
-    /* ── Admin per-seat map ── */
-    .admin-seat-grid { display: flex; flex-direction: column; gap: 0.5rem; }
-    .admin-seat-row  { display: flex; align-items: center; gap: 0.5rem; }
-    .admin-aisle     { width: 1.5rem; flex-shrink: 0; }
-    .admin-seat-empty { width: 90px; flex-shrink: 0; }
-    .admin-seat-input-wrap {
-      width: 90px; flex-shrink: 0;
-      background: white; border: 1.5px solid #e5e7eb; border-radius: 8px;
-      padding: 0.3rem 0.4rem; text-align: center;
-    }
-    .admin-seat-input-wrap:hover { border-color: #8b5cf6; }
-    .admin-seat-label { font-size: 0.7rem; font-weight: 600; color: #374151; margin-bottom: 2px; }
-    .admin-seat-price-input {
-      width: 100%; border: none; outline: none; text-align: center;
-      font-size: 0.85rem; font-weight: 600; color: #1e293b;
-      background: transparent; padding: 2px 0;
-    }
-    .admin-seat-price-input::placeholder { color: #94a3b8; font-weight: 400; }
-    /* ── User deck tabs ── */
-    .deck-tabs { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
-    .deck-tab-btn {
-      flex: 1; padding: 0.75rem 1rem; border-radius: 10px;
-      border: 2px solid #e5e7eb; background: white;
-      font-size: 0.95rem; font-weight: 600; color: #374151;
-      cursor: pointer; transition: all 0.2s;
-    }
-    .deck-tab-btn.active {
-      background: linear-gradient(135deg,#667eea,#764ba2);
-      color: white; border-color: transparent;
-      box-shadow: 0 4px 12px rgba(102,126,234,0.35);
-    }
-    /* ── New seat styles ── */
-    .seat-grid-new { display: flex; flex-direction: column; gap: 0.6rem; padding: 1rem; }
-    .seat-row-new  { display: flex; align-items: center; gap: 0.5rem; }
-    .seat-empty    { width: 72px; flex-shrink: 0; }
-    .seat-type-separator {
-      text-align: center; font-size: 0.75rem; color: #9ca3af;
-      margin: 0.25rem 0; padding-top: 0.5rem;
-      border-top: 1px dashed #e5e7eb;
-    }
-    .seat-new {
-      width: 72px; min-height: 62px; flex-shrink: 0;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      gap: 2px; border-radius: 10px; border: 2px solid #e2e8f0;
-      background: white; cursor: pointer; transition: all 0.18s;
-      padding: 0.3rem;
-    }
-    .seat-new:hover:not(:disabled) { border-color: #667eea; background: #eef2ff; transform: translateY(-1px); }
-    .seat-new.seat-selected  { background: #667eea; border-color: #4f46e5; color: white; }
-    .seat-new.seat-booked    { background: #f1f5f9; border-color: #cbd5e1; color: #94a3b8; cursor: not-allowed; }
-    .seat-new.seat-is-sleeper { border-radius: 14px; }
-    .seat-new.seat-type-seater { background: #f0fdf4; border-color: #bbf7d0; }
-    .seat-new.seat-type-seater:hover:not(:disabled) { border-color: #22c55e; background: #dcfce7; }
-    .seat-new.seat-type-seater.seat-selected { background: #16a34a; border-color: #15803d; color: white; }
-    .seat-number { font-size: 0.7rem; font-weight: 700; line-height: 1; }
-    .seat-icon   { font-size: 1rem; line-height: 1; }
-    .seat-price  { font-size: 0.65rem; color: #64748b; line-height: 1; }
-    .seat-new.seat-selected .seat-price  { color: rgba(255,255,255,0.85); }
-    .seat-new.seat-selected .seat-number { color: white; }
-    .sold-label  { font-size: 0.6rem; color: #94a3b8; }
-    .driver-indicator {
-      display: flex; align-items: center; gap: 0.5rem;
-      font-size: 0.8rem; color: #64748b; margin-bottom: 0.5rem;
-      padding: 0.4rem 0.75rem; background: #f8fafc;
-      border-radius: 8px; width: fit-content;
-    }
-    /* Toggle slider */
-    .toggle-switch { position:relative; display:inline-block; width:50px; height:26px; }
-    .toggle-switch input { opacity:0; width:0; height:0; }
-    .toggle-slider { position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0;
-      background:#ccc; border-radius:26px; transition:.3s; }
-    .toggle-slider:before { position:absolute; content:""; height:18px; width:18px;
-      left:4px; bottom:4px; background:white; border-radius:50%; transition:.3s; }
+    :root { --amber:#f59e0b; --amber-dark:#d97706; --amber-light:#fef3c7; --navy:#0f172a; --slate:#1e293b; }
+    #admin-login-modal { position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:9999;background:rgba(15,23,42,.75);backdrop-filter:blur(12px); }
+    #admin-login-modal.active { display:flex; }
+    .modal-content { background:#fff;padding:2.5rem 2rem;border-radius:20px;box-shadow:0 24px 80px rgba(0,0,0,.4);max-width:90%;width:420px;animation:modalPop .25s ease;border-top:4px solid var(--amber); }
+    @keyframes modalPop { from{transform:scale(.92);opacity:0;} to{transform:scale(1);opacity:1;} }
+    .lock-icon { width:64px;height:64px;background:linear-gradient(135deg,var(--amber),var(--amber-dark));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.8rem;box-shadow:0 4px 20px rgba(245,158,11,.45);margin:0 auto 1.25rem; }
+    .admin-page-content { visibility:hidden; }
+    body.admin-authed .admin-page-content { visibility:visible; }
+    .navbar { background:linear-gradient(135deg,var(--navy),var(--slate));border-bottom:3px solid var(--amber);padding:.75rem 0;position:sticky;top:0;z-index:500; }
+    .nav-content { display:flex;align-items:center;justify-content:space-between; }
+    .nav-brand { display:flex;align-items:center;gap:.75rem;text-decoration:none; }
+    .nav-links { display:flex;gap:1rem;list-style:none;margin:0;padding:0;align-items:center; }
+    .nav-link { color:rgba(255,255,255,.75);text-decoration:none;font-size:.875rem;font-weight:500; }
+    .nav-link:hover { color:var(--amber); }
+    .mobile-menu-btn { display:none;background:none;border:none;color:#fff;font-size:1.5rem;cursor:pointer; }
+    @media(max-width:768px){ .mobile-menu-btn{display:block;} .nav-links{display:none;} }
+    .admin-header { background:linear-gradient(135deg,var(--navy) 0%,#1e293b 50%,#0f172a 100%);padding:2.5rem 0 2rem;position:relative;overflow:hidden; }
+    .admin-header::before { content:'🚖';position:absolute;right:5%;top:50%;transform:translateY(-50%);font-size:8rem;opacity:.06; }
+    .admin-header-badge { display:inline-flex;align-items:center;gap:.5rem;background:rgba(245,158,11,.15);border:1px solid rgba(245,158,11,.35);color:var(--amber);font-size:.75rem;font-weight:700;padding:.3rem .9rem;border-radius:999px;margin-bottom:.75rem;letter-spacing:.1em;text-transform:uppercase; }
+    .stats-grid { display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1.25rem;margin-bottom:2rem; }
+    .stat-card { background:#fff;border-radius:1rem;padding:1.5rem;box-shadow:0 2px 12px rgba(0,0,0,.07);border:1px solid #f1f5f9;border-left:4px solid var(--amber);transition:transform .2s,box-shadow .2s;position:relative;overflow:hidden; }
+    .stat-card:hover { transform:translateY(-3px);box-shadow:0 8px 25px rgba(0,0,0,.1); }
+    .stat-icon { font-size:1.8rem;margin-bottom:.5rem; }
+    .stat-label { font-size:.78rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.08em;font-weight:600;margin-bottom:.3rem; }
+    .stat-value { font-size:2rem;font-weight:800;color:var(--slate);font-family:'Poppins',sans-serif; }
+    .stat-sub { font-size:.75rem;color:#94a3b8;margin-top:.25rem; }
+    .admin-tabs { display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.5rem;background:#f8fafc;border-radius:12px;padding:.4rem;border:1px solid #e2e8f0; }
+    .admin-tab-btn { flex:1;min-width:100px;padding:.6rem 1rem;border-radius:8px;border:none;background:transparent;font-size:.82rem;font-weight:600;color:#64748b;cursor:pointer;transition:all .2s;white-space:nowrap; }
+    .admin-tab-btn:hover { background:#fff;color:var(--slate); }
+    .admin-tab-btn.active { background:linear-gradient(135deg,var(--amber),var(--amber-dark));color:#fff;box-shadow:0 3px 12px rgba(245,158,11,.4); }
+    .admin-tab-content { display:none; }
+    .admin-tab-content.active { display:block; }
+    .card { background:#fff;padding:1.75rem;border-radius:1rem;box-shadow:0 2px 12px rgba(0,0,0,.07);border:1px solid #f1f5f9;margin-bottom:1.5rem; }
+    .card-hdr-amber { background:linear-gradient(135deg,#fffbeb,#fef3c7);border-bottom:1px solid #fde68a;padding:1rem 1.5rem;margin:-1.75rem -1.75rem 1.5rem;border-radius:.9rem .9rem 0 0; }
+    .card-hdr-blue { background:#eff6ff;border-bottom:1px solid #bfdbfe;padding:1rem 1.5rem;margin:-1.75rem -1.75rem 1.5rem;border-radius:.9rem .9rem 0 0; }
+    .card-hdr-purple { background:#f5f3ff;border-bottom:1px solid #ddd6fe;padding:1rem 1.5rem;margin:-1.75rem -1.75rem 1.5rem;border-radius:.9rem .9rem 0 0; }
+    .form-group { margin-bottom:1.25rem; }
+    .form-label { display:block;margin-bottom:.45rem;font-weight:600;font-size:.8rem;color:#374151;text-transform:uppercase;letter-spacing:.05em; }
+    .form-input { width:100%;padding:.7rem 1rem;border:2px solid #e2e8f0;border-radius:.75rem;font-size:.9rem;color:#1e293b;background:#f8fafc;transition:border-color .2s,box-shadow .2s;outline:none; }
+    .form-input:focus { border-color:var(--amber);box-shadow:0 0 0 3px rgba(245,158,11,.15);background:#fff; }
+    .form-help { display:block;margin-top:.4rem;font-size:.75rem;color:#94a3b8; }
+    .required { color:#ef4444; }
+    .form-row { display:grid;gap:1rem; }
+    .form-row-2 { grid-template-columns:1fr 1fr; }
+    .form-row-3 { grid-template-columns:1fr 1fr 1fr; }
+    @media(max-width:600px){ .form-row-2,.form-row-3 { grid-template-columns:1fr; } }
+    .btn { padding:.7rem 1.4rem;border-radius:.75rem;font-weight:600;cursor:pointer;border:none;transition:all .2s;display:inline-flex;align-items:center;gap:.45rem;font-size:.875rem; }
+    .btn-primary { background:linear-gradient(135deg,var(--amber),var(--amber-dark));color:#fff;box-shadow:0 3px 12px rgba(245,158,11,.35); }
+    .btn-primary:hover { transform:translateY(-2px);box-shadow:0 6px 20px rgba(245,158,11,.45); }
+    .btn-secondary { background:#475569;color:#fff; }
+    .btn-secondary:hover { background:#334155; }
+    .btn-outline { background:#fff;border:2px solid #e2e8f0;color:#374151; }
+    .btn-outline:hover { border-color:var(--amber);color:var(--amber); }
+    .btn-success { background:#10b981;color:#fff; }
+    .btn-success:hover { background:#059669;transform:translateY(-1px); }
+    .btn-danger { background:#ef4444;color:#fff; }
+    .btn-danger:hover { background:#dc2626; }
+    .btn-sm { padding:.35rem .75rem;font-size:.78rem;border-radius:.5rem; }
+    .btn-block { width:100%;justify-content:center; }
+    .btn-group { display:flex;gap:.5rem;flex-wrap:wrap; }
+    .table-container { overflow-x:auto;border-radius:1rem;border:1px solid #e2e8f0; }
+    .table { width:100%;border-collapse:collapse;font-size:.875rem; }
+    .table th { background:linear-gradient(135deg,var(--navy),var(--slate));color:#fff;padding:.75rem 1rem;text-align:left;font-size:.73rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap; }
+    .table td { padding:.85rem 1rem;border-bottom:1px solid #f1f5f9;vertical-align:top;color:#374151; }
+    .table tr:hover td { background:#fffbeb; }
+    .table tr:last-child td { border-bottom:none; }
+    .text-muted { color:#94a3b8;font-size:.8rem; }
+    .text-center { text-align:center; }
+    .token-code { background:#f1f5f9;padding:.2rem .5rem;border-radius:4px;font-family:monospace;font-size:.82rem;color:#7c3aed; }
+    .seat-badge-sm { display:inline-block;background:linear-gradient(135deg,var(--amber),var(--amber-dark));color:#fff;font-size:.7rem;font-weight:700;padding:.15rem .45rem;border-radius:999px;margin:1px; }
+    .badge-success { background:#d1fae5;color:#065f46;padding:.2rem .5rem;border-radius:4px;font-size:.75rem;font-weight:600; }
+    .badge-danger  { background:#fee2e2;color:#991b1b;padding:.2rem .5rem;border-radius:4px;font-size:.75rem;font-weight:600; }
+    .badge-secondary { background:#f1f5f9;color:#475569;padding:.2rem .5rem;border-radius:4px;font-size:.75rem; }
+    #route-selector { width:100%;padding:.75rem;font-size:1rem;border:2px solid #e2e8f0;border-radius:.75rem;background:#f8fafc;outline:none; }
+    #route-selector:focus { border-color:var(--amber);box-shadow:0 0 0 3px rgba(245,158,11,.15); }
+    #pricing-status .alert { padding:1rem;border-radius:.75rem;margin-bottom:0; }
+    #pricing-status .alert-info { background:#fef3c7;border:1px solid #fcd34d;color:#92400e; }
+    #pricing-status .alert-secondary { background:#f1f5f9;border:1px solid #e2e8f0;color:#475569; }
+    .pricing-info-box { background:linear-gradient(135deg,var(--amber),var(--amber-dark));color:#fff;padding:1.5rem;border-radius:12px;box-shadow:0 4px 12px rgba(245,158,11,.3);margin-top:1rem; }
+    .pricing-info-header { display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;font-size:1rem;font-weight:600; }
+    .pricing-info-header .badge { padding:.25rem .75rem;border-radius:999px;font-size:.75rem;font-weight:600; }
+    .badge-success-pill { background:#fff;color:#92400e; }
+    .badge-secondary-pill { background:rgba(255,255,255,.2);color:#fff; }
+    .pricing-grid { display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.5rem;margin-bottom:1rem; }
+    .pricing-item { display:flex;flex-direction:column;gap:.25rem; }
+    .pricing-label { font-size:.875rem;opacity:.9; }
+    .pricing-value { font-size:1.6rem;font-weight:700; }
+    .pricing-note { padding-top:1rem;border-top:1px solid rgba(255,255,255,.2);opacity:.9;font-size:.875rem; }
+    .pricing-card { border-radius:12px;padding:1.5rem;border:2px solid;transition:all .25s; }
+    .pricing-card:hover { transform:translateY(-3px);box-shadow:0 8px 20px rgba(0,0,0,.1); }
+    .pricing-card-front { background:#f0f9ff;border-color:#7dd3fc; }
+    .pricing-card-rear  { background:#fffbeb;border-color:var(--amber); }
+    .pricing-card-header { display:flex;align-items:center;gap:.75rem;margin-bottom:1rem;padding-bottom:.75rem;border-bottom:1px solid rgba(0,0,0,.08); }
+    .pricing-icon { font-size:1.5rem; }
+    .pricing-card-header h4 { margin:0;font-size:1rem;font-weight:700; }
+    .pricing-input { width:100%;padding:.75rem;font-size:1.25rem;font-weight:700;border:2px solid #e2e8f0;border-radius:.75rem;text-align:center;transition:all .2s;outline:none; }
+    .pricing-input:focus { border-color:var(--amber);box-shadow:0 0 0 3px rgba(245,158,11,.15); }
+    .pricing-help { display:block;margin-top:.5rem;font-size:.75rem;color:#6b7280;line-height:1.5; }
+    .pricing-preview { margin:1.5rem 0;padding:1.25rem;background:#f9fafb;border-radius:.75rem;border:2px solid #e2e8f0; }
+    .form-actions { display:flex;gap:.75rem;justify-content:center;margin-top:2rem;padding-top:2rem;border-top:2px solid #e2e8f0;flex-wrap:wrap; }
+    .alert { padding:1rem;border-radius:.75rem;margin-bottom:1rem; }
+    .alert-info { background:#fef3c7;border-left:4px solid var(--amber);color:#92400e; }
+    .admin-seat-grid { display:flex;flex-direction:column;gap:.5rem; }
+    .admin-seat-row { display:flex;align-items:center;gap:.5rem; }
+    .admin-aisle { width:1.5rem;flex-shrink:0; }
+    .admin-seat-empty { width:90px;flex-shrink:0; }
+    .admin-seat-input-wrap { width:90px;flex-shrink:0;background:#fff;border:1.5px solid #e5e7eb;border-radius:8px;padding:.3rem .4rem;text-align:center; }
+    .admin-seat-input-wrap:hover { border-color:var(--amber); }
+    .admin-seat-label { font-size:.7rem;font-weight:600;color:#374151;margin-bottom:2px; }
+    .admin-seat-price-input { width:100%;border:none;outline:none;text-align:center;font-size:.85rem;font-weight:600;color:#1e293b;background:transparent;padding:2px 0; }
+    .admin-seat-price-input::placeholder { color:#94a3b8;font-weight:400; }
+    #export-modal { position:fixed;inset:0;z-index:9998;display:none;align-items:center;justify-content:center;background:rgba(15,23,42,.55);backdrop-filter:blur(6px); }
+    #export-modal.active { display:flex; }
+    .export-modal-box { background:#fff;border-radius:16px;padding:2rem;width:440px;max-width:94vw;box-shadow:0 20px 60px rgba(0,0,0,.25);animation:modalPop .2s ease;border-top:4px solid var(--amber); }
+    .export-option { display:flex;flex-direction:column;gap:.75rem;margin-bottom:1.5rem; }
+    .export-option label { display:flex;align-items:flex-start;gap:.75rem;padding:.875rem 1rem;border:2px solid #e2e8f0;border-radius:.75rem;cursor:pointer;transition:all .2s; }
+    .export-option label:hover { border-color:var(--amber);background:#fffbeb; }
+    .export-option input[type=radio] { margin-top:3px;accent-color:var(--amber); }
+    .export-option .opt-label { font-weight:600;font-size:.9rem;color:#1e293b; }
+    .export-option .opt-desc { font-size:.8rem;color:#64748b; }
+    #export-filter-fields { display:none;margin-bottom:1rem; }
+    #export-filter-fields.visible { display:block; }
+    .date-pill { display:inline-flex;align-items:center;gap:.3rem;background:#fef3c7;color:#92400e;border-radius:999px;padding:.2rem .65rem;font-size:.8rem;font-weight:600;border:1px solid #fcd34d; }
+    .date-pill button { background:none;border:none;cursor:pointer;color:#ef4444;font-size:.9rem;line-height:1;padding:0;margin-left:.1rem; }
+    .toggle-switch { position:relative;display:inline-block;width:44px;height:24px; }
+    .toggle-switch input { opacity:0;width:0;height:0; }
+    .toggle-slider { position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#cbd5e1;border-radius:24px;transition:.3s; }
+    .toggle-slider:before { position:absolute;content:"";height:16px;width:16px;left:4px;bottom:4px;background:white;border-radius:50%;transition:.3s; }
     input:checked + .toggle-slider { background:#10b981; }
-    input:checked + .toggle-slider:before { transform: translateX(24px); }
-    .toggle-label { display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; }
-    /* Date pills */
-    .date-pill { display:inline-flex; align-items:center; gap:0.3rem; background:#eff6ff;
-      color:#3b82f6; border-radius:16px; padding:0.2rem 0.65rem; font-size:0.8rem;
-      font-weight:600; border:1px solid #bfdbfe; }
-    .date-pill button { background:none; border:none; cursor:pointer; color:#ef4444;
-      font-size:0.9rem; line-height:1; padding:0; margin-left:0.1rem; }
+    input:checked + .toggle-slider:before { transform:translateX(20px); }
+    #tab-cablists .table { table-layout:fixed;width:100%; }
+    #tab-cablists .table th:nth-child(1){width:16%;}#tab-cablists .table th:nth-child(2){width:14%;}
+    #tab-cablists .table th:nth-child(3){width:20%;}#tab-cablists .table th:nth-child(4){width:18%;}
+    #tab-cablists .table th:nth-child(5){width:9%;}#tab-cablists .table th:nth-child(6){width:9%;}
+    #tab-cablists .table th:nth-child(7){width:14%;}
+    #tab-cablists .table td { white-space:normal;word-break:break-word;overflow-wrap:break-word;vertical-align:top;padding-top:.7rem; }
+    .cab-type-card { cursor:pointer;border:2px solid #e2e8f0;border-radius:.75rem;padding:1rem;display:flex;align-items:center;gap:.75rem;transition:all .2s; }
+    .cab-type-card.active { border-color:var(--amber);background:#fffbeb; }
+    .container { max-width:1200px;margin:0 auto;padding:0 1rem; }
+    @media(max-width:768px){ .pricing-grid{grid-template-columns:1fr;} .form-actions{flex-direction:column;} }
   </style>
 </head>
 <body>
 
-  <!-- ══════════════════════════════════════
-       ADMIN LOGIN MODAL (always on top)
-  ══════════════════════════════════════ -->
-  <div id="admin-login-modal">
-    <div class="modal-content">
-      <div class="modal-logo">
-        <div class="lock-icon">🔐</div>
+<!-- LOGIN MODAL -->
+<div id="admin-login-modal">
+  <div class="modal-content">
+    <div class="lock-icon">🔐</div>
+    <h2 style="text-align:center;margin-bottom:.25rem;font-size:1.4rem;font-weight:700;color:#1e293b;">Admin Access</h2>
+    <p style="text-align:center;color:#94a3b8;font-size:.875rem;margin-bottom:1.5rem;">🚖 Shree Ram Taxi — Secure Login</p>
+    <form id="admin-login-form" onsubmit="handleAdminLogin(event)">
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" class="form-input" id="admin-password" placeholder="••••••••" required autofocus>
       </div>
-      <h2 style="text-align:center;margin-bottom:0.25rem;font-size:1.4rem;font-weight:700;">Admin Access</h2>
-      <p style="text-align:center;color:#6b7280;font-size:0.875rem;margin-bottom:1.5rem;">Enter your password to continue</p>
-      <form id="admin-login-form" onsubmit="handleAdminLogin(event)">
-        <div class="form-group">
-          <label class="form-label">Password</label>
-          <input type="password" class="form-input" id="admin-password"
-                 placeholder="••••••••••" required autofocus>
-          <!-- NO hint shown here -->
-        </div>
-        <button type="submit" class="btn btn-primary btn-block" style="margin-top:0.5rem;">
-          Unlock Dashboard →
-        </button>
-      </form>
+      <button type="submit" class="btn btn-primary btn-block" style="margin-top:.5rem;">🚀 Unlock Dashboard</button>
+    </form>
+  </div>
+</div>
+
+<!-- EXPORT MODAL -->
+<div id="export-modal">
+  <div class="export-modal-box">
+    <h3 style="font-size:1.2rem;font-weight:700;margin-bottom:.25rem;">📥 Export Booking Data</h3>
+    <p style="color:#6b7280;font-size:.875rem;margin-bottom:1.5rem;">Download as CSV (opens in Excel)</p>
+    <div class="export-option">
+      <label><input type="radio" name="export-type" value="all" checked><div><div class="opt-label">All Bookings</div><div class="opt-desc">Every booking in the system</div></div></label>
+      <label><input type="radio" name="export-type" value="filter"><div><div class="opt-label">Filter by Date &amp; Route</div><div class="opt-desc">Choose a date range and/or specific cab route</div></div></label>
+    </div>
+    <div id="export-filter-fields">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:.75rem;">
+        <div><label style="font-size:.8rem;font-weight:600;color:#374151;display:block;margin-bottom:.3rem;">From Date</label><input type="date" id="export-date-from" class="form-input" style="font-size:.875rem;"></div>
+        <div><label style="font-size:.8rem;font-weight:600;color:#374151;display:block;margin-bottom:.3rem;">To Date</label><input type="date" id="export-date-to" class="form-input" style="font-size:.875rem;"></div>
+      </div>
+      <div><label style="font-size:.8rem;font-weight:600;color:#374151;display:block;margin-bottom:.3rem;">Cab Route (optional)</label><select id="export-route-filter" class="form-input" style="font-size:.875rem;"><option value="">All Routes</option></select></div>
+    </div>
+    <div style="display:flex;gap:.75rem;justify-content:flex-end;margin-top:1rem;">
+      <button class="btn btn-outline" onclick="closeExportModal()">Cancel</button>
+      <button class="btn btn-success" onclick="executeExport()">⬇️ Download Excel</button>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE CONTENT -->
+<div class="admin-page-content">
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="container">
+      <div class="nav-content">
+        <a href="index.html" class="nav-brand">
+          <img src="assets/icons/shree-ram-logo.png" alt="Shree Ram Taxi" style="height:42px;">
+          <span style="color:#fff;font-family:'Poppins',sans-serif;font-weight:700;font-size:1rem;">
+            🚖 Shree Ram <span style="color:var(--amber);">Taxi</span>
+            <span style="font-size:.68rem;opacity:.55;font-weight:400;display:block;line-height:1;">Admin Dashboard</span>
+          </span>
+        </a>
+        <button class="mobile-menu-btn" id="mobile-menu-btn">☰</button>
+        <ul class="nav-links" id="mobile-menu">
+          <li><a href="index.html" class="nav-link">🏠 Home</a></li>
+          <li><a href="timings.html" class="nav-link">📋 Schedules</a></li>
+          <li><button class="btn btn-sm btn-outline" onclick="adminLogout()" style="color:#fff;border-color:rgba(255,255,255,.3);">🚪 Logout</button></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HEADER -->
+  <div class="admin-header">
+    <div class="container" style="padding:0 1rem;">
+      <div class="admin-header-badge">🚖 Taxi Operations</div>
+      <h1 style="color:#fff;font-family:'Poppins',sans-serif;font-size:2rem;font-weight:700;margin-bottom:.25rem;">Taxi Admin Dashboard</h1>
+      <p style="color:rgba(255,255,255,.6);font-size:.95rem;">Manage cab schedules, bookings, seat pricing and coupons</p>
     </div>
   </div>
 
-  <!-- ══════════════════════════════════════
-       EXPORT MODAL
-  ══════════════════════════════════════ -->
-  <div id="export-modal">
-    <div class="export-modal-box">
-      <h3>📥 Download Bookings Excel</h3>
-      <p>Choose what data to include in your export.</p>
+  <div class="container" style="padding:2rem 1rem;">
 
-      <div class="export-option">
-        <label>
-          <input type="radio" name="export-type" value="all" checked>
-          <div>
-            <div class="opt-label">All Bookings</div>
-            <div class="opt-desc">Download every booking in the system</div>
-          </div>
-        </label>
-        <label>
-          <input type="radio" name="export-type" value="filter">
-          <div>
-            <div class="opt-label">Filter by Date &amp; Route</div>
-            <div class="opt-desc">Choose a specific date range and/or bus route</div>
-          </div>
-        </label>
-      </div>
-
-      <div id="export-filter-fields">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:0.75rem;">
-          <div>
-            <label style="font-size:0.8rem;font-weight:600;color:#374151;display:block;margin-bottom:0.3rem;">From Date</label>
-            <input type="date" id="export-date-from" class="form-input" style="font-size:0.875rem;">
-          </div>
-          <div>
-            <label style="font-size:0.8rem;font-weight:600;color:#374151;display:block;margin-bottom:0.3rem;">To Date</label>
-            <input type="date" id="export-date-to" class="form-input" style="font-size:0.875rem;">
-          </div>
-        </div>
-        <div>
-          <label style="font-size:0.8rem;font-weight:600;color:#374151;display:block;margin-bottom:0.3rem;">Bus Route (optional)</label>
-          <select id="export-route-filter" class="form-input" style="font-size:0.875rem;">
-            <option value="">All Routes</option>
-          </select>
-        </div>
-      </div>
-
-      <div style="display:flex;gap:0.75rem;justify-content:flex-end;margin-top:1rem;">
-        <button class="btn btn-outline" onclick="closeExportModal()">Cancel</button>
-        <button class="btn btn-success" onclick="executeExport()">⬇️ Download Excel</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ══════════════════════════════════════
-       PAGE CONTENT (blurred when modal open)
-  ══════════════════════════════════════ -->
-  <div class="admin-page-content">
-
-    <!-- Navbar -->
-    <nav class="navbar">
-      <div class="container">
-        <div class="nav-content">
-          <a href="index.html" class="nav-brand">
-            <img src="assets/icons/shree-ram-logo.png" alt="Shree Ram Taxi" style="height:44px;"> <span style="color:#fff;font-family:Poppins,sans-serif;font-weight:700;">🚖 Shree Ram <span style="color:#f59e0b;">Taxi</span> Admin</span>
-          </a>
-          <button class="mobile-menu-btn" id="mobile-menu-btn">☰</button>
-          <ul class="nav-links" id="mobile-menu">
-            <li><a href="index.html"   class="nav-link">Home</a></li>
-            <li><a href="timings.html" class="nav-link">Cab Schedules</a></li>
-
-            <li><button class="btn btn-sm btn-outline" onclick="adminLogout()">Logout</button></li>
-          </ul>
-        </div>
-      </div>
-    </nav>
-
-    <!-- Admin Header -->
-    <div class="admin-header">
-      <div class="container px-4">
-        <h1 style="color:white;font-size:2rem;">Admin Dashboard</h1>
-        <p style="color:var(--slate-300);">Manage schedules, bookings, and pricing</p>
-      </div>
+    <!-- STATS -->
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-label">Total Revenue</div><div class="stat-value" id="stat-revenue">₹0</div><div class="stat-sub">Confirmed bookings</div></div>
+      <div class="stat-card"><div class="stat-icon">🎫</div><div class="stat-label">Total Bookings</div><div class="stat-value" id="stat-bookings">0</div><div class="stat-sub">All confirmed rides</div></div>
+      <div class="stat-card"><div class="stat-icon">🚖</div><div class="stat-label">Active Schedules</div><div class="stat-value" id="stat-buses">0</div><div class="stat-sub">Upcoming cab trips</div></div>
     </div>
 
-    <!-- Main Content -->
-    <div class="container px-4 py-8">
+    <div style="display:flex;gap:.75rem;margin-bottom:1.5rem;flex-wrap:wrap;">
+      <button class="btn btn-outline" onclick="loadStats()" style="font-size:.8rem;">🔄 Refresh Stats</button>
+      <button onclick="resetStatsTemporary()" style="background:#fee2e2;color:#dc2626;border:2px solid #fecaca;border-radius:.75rem;padding:.45rem 1rem;font-size:.8rem;font-weight:600;cursor:pointer;">⚠️ Reset to Zero</button>
+    </div>
 
-      <!-- Stats -->
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-label">Total Revenue</div>
-          <div class="stat-value" id="stat-revenue">₹0</div>
+    <!-- TABS -->
+    <div class="admin-tabs">
+      <button class="admin-tab-btn active" onclick="switchAdminTab('schedules',event)">🗓️ Add Schedule</button>
+      <button class="admin-tab-btn" onclick="switchAdminTab('bookings',event)">🎫 Bookings</button>
+      <button class="admin-tab-btn" onclick="switchAdminTab('pricing',event)">💰 Pricing</button>
+      <button class="admin-tab-btn" onclick="switchAdminTab('cablists',event)">🚖 Cab List</button>
+      <button class="admin-tab-btn" onclick="switchAdminTab('coupons',event)">🎟️ Coupons</button>
+    </div>
+
+    <!-- TAB: SCHEDULES -->
+    <div id="tab-schedules" class="admin-tab-content active">
+      <div class="card">
+        <div class="card-hdr-amber">
+          <div style="font-size:1.05rem;font-weight:700;color:#92400e;" id="form-title">🗓️ Add New Cab Schedule</div>
+          <div style="font-size:.82rem;color:#a16207;margin-top:.25rem;">Set the cab type, route, timing and dates for a new shared cab trip</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-label">Total Bookings</div>
-          <div class="stat-value" id="stat-bookings">0</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-label">Active Buses</div>
-          <div class="stat-value" id="stat-buses">0</div>
-        </div>
-      </div>
+        <form id="schedule-form">
+          <input type="hidden" id="schedule-id">
+          <input type="hidden" id="bus-name" value="Shree Ram Taxi">
 
-      <div style="text-align:center;margin:1rem 0;display:flex;gap:1rem;justify-content:center;align-items:center;">
-        <button class="btn btn-sm" onclick="loadStats()" style="background:#10b981;color:white;padding:0.5rem 1rem;border-radius:6px;font-size:0.875rem;border:none;cursor:pointer;">
-          🔄 Refresh Stats
-        </button>
-        <button class="btn btn-sm" onclick="resetStatsTemporary()" style="background:#ef4444;color:white;padding:0.5rem 1rem;border-radius:6px;font-size:0.875rem;border:none;cursor:pointer;">
-          ⚠️ Reset to Zero
-        </button>
-      </div>
-
-      <!-- Tabs -->
-      <div class="admin-tabs">
-        <button class="admin-tab-btn active" onclick="switchAdminTab('schedules', event)">Bus Schedules</button>
-        <button class="admin-tab-btn"        onclick="switchAdminTab('bookings', event)">Bookings</button>
-        <button class="admin-tab-btn"        onclick="switchAdminTab('pricing', event)">Pricing</button>
-        <button class="admin-tab-btn"        onclick="switchAdminTab('buslists', event)">Bus Lists</button>
-        <button class="admin-tab-btn"        onclick="switchAdminTab('coupons', event)">Coupons</button>
-      </div>
-
-      <!-- Tab: Schedules -->
-      <div id="tab-schedules" class="admin-tab-content active">
-        <div class="card mb-8">
-          <h3 class="summary-title" id="form-title">Add New Schedule</h3>
-          <form id="schedule-form">
-            <input type="hidden" id="schedule-id">
-            <input type="hidden" id="bus-name" value="Shree Ram Taxi">
-            <div class="form-group">
-                <label class="form-label">🚌 Bus Type</label>
-                <select class="form-input" id="bus-type" required>
-                  <option value="Sedan (4+1)">Sedan (4+1) — 4 Passenger Seats</option>
-                  <option value="SUV (6+1)">SUV (6+1) — 6 Passenger Seats</option>
-                </select>
-              </div>
-
-            <!-- Row 1: Origin & Destination -->
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
-              <div class="form-group">
-                <label class="form-label">🏙️ Origin City</label>
-                <input type="text" class="form-input" id="origin" placeholder="e.g. Dehradun" required>
-              </div>
-              <div class="form-group">
-                <label class="form-label">🏙️ Destination City</label>
-                <input type="text" class="form-input" id="destination" placeholder="e.g. Jaipur" required>
-              </div>
-            </div>
-
-            <!-- Row 2: Pick Up & Drop Points -->
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
-              <div class="form-group">
-                <label class="form-label">📍 Pick Up Point</label>
-                <input type="text" class="form-input" id="pickup-point"
-                       placeholder="e.g. ISBT Dehradun, Gate 3" required>
-                <small class="text-muted">Exact boarding location for passengers</small>
-              </div>
-              <div class="form-group">
-                <label class="form-label">📍 Drop Point</label>
-                <input type="text" class="form-input" id="drop-point"
-                       placeholder="e.g. Sindhi Camp Bus Stand, Jaipur" required>
-                <small class="text-muted">Exact drop-off location</small>
-              </div>
-            </div>
-
-            <!-- Row 3: Departure Time & Duration -->
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
-              <div class="form-group">
-                <label class="form-label">🕐 Departure Time <span class="required">*</span></label>
-                <input type="time" class="form-input" id="bus-time" required>
-              </div>
-              <div class="form-group">
-                <label class="form-label">⏱️ Time Taken</label>
-                <div style="display:flex;gap:0.5rem;align-items:center;">
-                  <input type="number" class="form-input" id="duration-hours" placeholder="Hrs" min="0" max="72" style="width:50%;">
-                  <input type="number" class="form-input" id="duration-minutes" placeholder="Min" min="0" max="59" style="width:50%;">
+          <!-- Cab Type visual selector -->
+          <div class="form-group">
+            <label class="form-label">🚗 Cab Type <span class="required">*</span></label>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;">
+              <label class="cab-type-card active" id="lbl-sedan" onclick="selectCabType('Sedan (4+1)')">
+                <input type="radio" name="cab-type-vis" value="Sedan (4+1)" checked style="accent-color:var(--amber);flex-shrink:0;">
+                <div>
+                  <div style="font-weight:700;font-size:.95rem;color:#1e293b;">🚗 Sedan</div>
+                  <div style="font-size:.75rem;color:#64748b;margin-top:.15rem;">4+1 (Driver) · 4 bookable seats (F1, R1–R3)</div>
                 </div>
-                <small class="text-muted">Hours &amp; Minutes (e.g. 8 hrs 30 min)</small>
-              </div>
-            </div>
-
-            <!-- Row 4: Schedule Mode -->
-            <div class="form-group">
-              <label class="form-label">📅 Schedule Type <span class="required">*</span></label>
-              <div style="display:flex;gap:0.75rem;margin-bottom:0.75rem;flex-wrap:wrap;">
-                <label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;padding:0.5rem 1rem;border:2px solid #e5e7eb;border-radius:8px;font-size:0.9rem;" id="mode-tab-daterange">
-                  <input type="radio" name="schedule-mode" value="daterange" onchange="setScheduleMode('daterange')" checked> 📆 Date Range
-                </label>
-<label style="display:flex;align-items:center;gap:0.4rem;cursor:pointer;padding:0.5rem 1rem;border:2px solid #e5e7eb;border-radius:8px;font-size:0.9rem;" id="mode-tab-specific">
-                  <input type="radio" name="schedule-mode" value="specific" onchange="setScheduleMode('specific')"> 📌 Specific Dates
-                </label>
-              </div>
-
-              <!-- Date Range Mode -->
-              <div id="mode-panel-daterange" style="border:1px solid #e5e7eb;border-radius:8px;padding:1rem;background:#f8fafc;">
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
-                  <div>
-                    <label class="form-label" style="font-size:0.82rem;">Start Date</label>
-                    <input type="date" class="form-input" id="range-start" onchange="previewDateRange()">
-                  </div>
-                  <div>
-                    <label class="form-label" style="font-size:0.82rem;">End Date</label>
-                    <input type="date" class="form-input" id="range-end" onchange="previewDateRange()">
-                  </div>
+              </label>
+              <label class="cab-type-card" id="lbl-suv" onclick="selectCabType('SUV (6+1)')">
+                <input type="radio" name="cab-type-vis" value="SUV (6+1)" style="accent-color:var(--amber);flex-shrink:0;">
+                <div>
+                  <div style="font-weight:700;font-size:.95rem;color:#1e293b;">🚙 SUV</div>
+                  <div style="font-size:.75rem;color:#64748b;margin-top:.15rem;">6+1 (Driver) · 6 bookable seats (F1, R1–R5)</div>
                 </div>
-                <div id="range-preview" style="margin-top:0.6rem;font-size:0.82rem;color:#6b7280;"></div>
-              </div>
-
-              <!-- Specific Dates Mode -->
-              <div id="mode-panel-specific" style="display:none;border:1px solid #e5e7eb;border-radius:8px;padding:1rem;background:#f8fafc;">
-                <div id="selected-dates-list" style="display:flex;flex-wrap:wrap;gap:0.4rem;margin-bottom:0.5rem;min-height:28px;"></div>
-                <input type="date" class="form-input" id="bus-date-picker" style="max-width:220px;" onchange="addBusDate(this.value); this.value=''">
-                <small class="text-muted" style="display:block;margin-top:0.4rem;">Click to add multiple specific dates.</small>
-              </div>
-
-              <input type="hidden" id="bus-dates-json" value="[]">
-              <div id="dates-summary" style="margin-top:0.6rem;font-size:0.82rem;font-weight:600;color:#667eea;"></div>
+              </label>
             </div>
-
-            <!-- Row 4: Price -->
-            <div class="form-group">
-              <label class="form-label">💰 Base Price (₹) <span class="required">*</span></label>
-              <input type="number" class="form-input" id="price" min="0" placeholder="e.g. 1200 (optional)">
-              <small class="text-muted">
-                Optional — if entered, this price will be automatically applied to <strong>all seats</strong>
-                (both lower &amp; upper decks) for this route. You can fine-tune per-seat prices in the Pricing tab.
-              </small>
-            </div>
-
-            <div id="schedule-pricing-preview" style="display:none;margin-top:1rem;"></div>
-            <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-top:0.5rem;">
-              <button type="submit" class="btn btn-primary">💾 Save Schedule</button>
-              <button type="button" class="btn btn-secondary" onclick="resetScheduleForm()">🔄 Reset Form</button>
-            </div>
-          </form>
-        </div>
-
-
-      </div>
-
-      <!-- Tab: Bookings -->
-      <div id="tab-bookings" class="admin-tab-content">
-        <div class="bookings-toolbar">
-          <h3 style="font-size:1.1rem;font-weight:600;color:var(--secondary);margin:0;">All Bookings</h3>
-          <button class="btn btn-success" onclick="openExportModal()">
-            📥 Download User Excel Sheet
-          </button>
-        </div>
-        <div class="table-container">
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Token</th><th>Passenger</th><th>Contact</th><th>Bus Details</th><th>Date</th><th>Seats</th><th>Amount</th><th>Status</th><th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="bookings-table-body"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Tab: Pricing -->
-      <div id="tab-pricing" class="admin-tab-content">
-        <div class="tab-header">
-          <h2>Seat Pricing Configuration</h2>
-          <p class="tab-description">Set pricing per route. Use deck-level defaults or override individual seats.</p>
-        </div>
-
-        <!-- Route Selector (unchanged) -->
-        <div class="card" style="margin-bottom:2rem;">
-          <div class="card-header">
-            <h3>Select Route</h3>
-            <p class="card-description">Choose a route to configure pricing. Routes with ⭐ have custom pricing set.</p>
+            <select class="form-input" id="bus-type" required style="display:none;">
+              <option value="Sedan (4+1)">Sedan (4+1)</option>
+              <option value="SUV (6+1)">SUV (6+1)</option>
+            </select>
           </div>
-          <div class="card-body">
+
+          <div class="form-row form-row-2">
             <div class="form-group">
-              <label for="route-selector">Route</label>
-              <select id="route-selector" class="form-control">
-                <option value="">Select a route…</option>
-              </select>
-              <small class="form-help">Routes marked with ⭐ have custom pricing.</small>
+              <label class="form-label">🏙️ Origin City <span class="required">*</span></label>
+              <input type="text" class="form-input" id="origin" placeholder="e.g. Dehradun" required>
             </div>
-            <div id="pricing-status" style="margin-top:1rem;">
-              <div class="alert alert-secondary"><strong>Select a route</strong> to configure pricing.</div>
-            </div>
-          </div>
-        </div>
-
-        <form id="pricing-form">
-
-          <!-- ══ Section 1: Deck-Level Pricing ══ -->
-          <div class="card" style="margin-bottom:2rem;border-left:4px solid #3b82f6;">
-            <div class="card-header" style="background:#eff6ff;">
-              <h3 style="color:#1d4ed8;">📋 Section 1 — Deck Default Prices</h3>
-              <p class="card-description">Set one price for all lower seats and one for all upper seats. Per-seat overrides in Section 2 take priority.</p>
-            </div>
-            <div class="card-body">
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
-                <div class="pricing-card pricing-card-blue">
-                  <div class="pricing-card-header"><span class="pricing-icon">🪑</span><h4>Front Seat (F1)</h4></div>
-                  <div class="pricing-card-body">
-                    <label for="lower-deck-price">Default price per seat (₹)</label>
-                    <input type="number" id="lower-deck-price" class="form-control pricing-input" min="0" step="1" required placeholder="600" oninput="updateDeckPricePreview()">
-                    <small class="pricing-help">Applies to the front passenger seat (F1) unless individually overridden</small>
-                  </div>
-                </div>
-                <div class="pricing-card pricing-card-orange">
-                  <div class="pricing-card-header"><span class="pricing-icon">💺</span><h4>Rear Seats (R1–R5)</h4></div>
-                  <div class="pricing-card-body">
-                    <label for="upper-deck-price">Default price per seat (₹)</label>
-                    <input type="number" id="upper-deck-price" class="form-control pricing-input" min="0" step="1" required placeholder="500" oninput="updateDeckPricePreview()">
-                    <small class="pricing-help">Applies to all rear passenger seats (R1–R5) unless individually overridden</small>
-                  </div>
-                </div>
-              </div>
-              <div id="pricing-preview" class="pricing-preview" style="margin-top:1.5rem;"></div>
+            <div class="form-group">
+              <label class="form-label">🏙️ Destination City <span class="required">*</span></label>
+              <input type="text" class="form-input" id="destination" placeholder="e.g. Delhi" required>
             </div>
           </div>
 
-          <!-- ══ Section 2: Per-Seat Map ══ -->
-          <div class="card" style="margin-bottom:2rem;border-left:4px solid #8b5cf6;">
-            <div class="card-header" style="background:#f5f3ff;">
-              <h3 style="color:#6d28d9;">🗺️ Section 2 — Per-Seat Price Override</h3>
-              <p class="card-description">Optionally set individual prices for specific seats. Leave blank to use deck defaults above.</p>
+          <div class="form-row form-row-2">
+            <div class="form-group">
+              <label class="form-label">📍 Pickup Point <span class="required">*</span></label>
+              <input type="text" class="form-input" id="pickup-point" placeholder="e.g. ISBT Dehradun, Gate 3" required>
+              <small class="form-help">Exact boarding location shown to passengers</small>
             </div>
-            <div class="card-body">
-              <div id="per-seat-map-container">
-                <p style="color:#6b7280;text-align:center;padding:2rem 0;">Select a route above to configure per-seat prices.</p>
-              </div>
+            <div class="form-group">
+              <label class="form-label">📍 Drop Point <span class="required">*</span></label>
+              <input type="text" class="form-input" id="drop-point" placeholder="e.g. Kashmere Gate ISBT, Delhi" required>
+              <small class="form-help">Exact drop-off location shown to passengers</small>
             </div>
           </div>
 
-          <div class="form-actions">
-            <button type="submit" class="btn btn-primary">💾 Save Pricing</button>
-            <button type="button" class="btn btn-secondary" onclick="resetAllPricing()">🔄 Reset All to Defaults</button>
-            <button type="button" class="btn btn-outline" onclick="resetRoutePricing()" id="reset-route-btn" style="display:none;">↩️ Reset Route to Default</button>
+          <div class="form-row form-row-2">
+            <div class="form-group">
+              <label class="form-label">🕐 Departure Time <span class="required">*</span></label>
+              <input type="time" class="form-input" id="bus-time" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">⏱️ Journey Duration</label>
+              <div style="display:flex;gap:.5rem;">
+                <input type="number" class="form-input" id="duration-hours" placeholder="Hours" min="0" max="72" style="flex:1;">
+                <input type="number" class="form-input" id="duration-minutes" placeholder="Mins" min="0" max="59" style="flex:1;">
+              </div>
+              <small class="form-help">e.g. 5 hrs 30 min</small>
+            </div>
+          </div>
+
+          <!-- Schedule Mode -->
+          <div class="form-group">
+            <label class="form-label">📅 Schedule Dates <span class="required">*</span></label>
+            <div style="display:flex;gap:.75rem;margin-bottom:.75rem;flex-wrap:wrap;">
+              <label style="display:flex;align-items:center;gap:.4rem;cursor:pointer;padding:.5rem 1rem;border:2px solid #e2e8f0;border-radius:.75rem;font-size:.875rem;font-weight:500;transition:all .2s;" id="mode-tab-daterange">
+                <input type="radio" name="schedule-mode" value="daterange" onchange="setScheduleMode('daterange')" checked style="accent-color:var(--amber);"> 📆 Date Range
+              </label>
+              <label style="display:flex;align-items:center;gap:.4rem;cursor:pointer;padding:.5rem 1rem;border:2px solid #e2e8f0;border-radius:.75rem;font-size:.875rem;font-weight:500;transition:all .2s;" id="mode-tab-specific">
+                <input type="radio" name="schedule-mode" value="specific" onchange="setScheduleMode('specific')" style="accent-color:var(--amber);"> 📌 Specific Dates
+              </label>
+            </div>
+            <div id="mode-panel-daterange" style="border:2px solid #fde68a;border-radius:.75rem;padding:1rem;background:#fffbeb;">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                <div><label class="form-label" style="font-size:.75rem;">Start Date</label><input type="date" class="form-input" id="range-start" onchange="previewDateRange()"></div>
+                <div><label class="form-label" style="font-size:.75rem;">End Date</label><input type="date" class="form-input" id="range-end" onchange="previewDateRange()"></div>
+              </div>
+              <div id="range-preview" style="margin-top:.6rem;font-size:.82rem;color:#92400e;"></div>
+            </div>
+            <div id="mode-panel-specific" style="display:none;border:2px solid #fde68a;border-radius:.75rem;padding:1rem;background:#fffbeb;">
+              <div id="selected-dates-list" style="display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.5rem;min-height:28px;"></div>
+              <input type="date" class="form-input" id="bus-date-picker" style="max-width:200px;" onchange="addBusDate(this.value);this.value=''">
+              <small class="form-help" style="margin-top:.4rem;">Click to add individual dates.</small>
+            </div>
+            <input type="hidden" id="bus-dates-json" value="[]">
+            <div id="dates-summary" style="margin-top:.6rem;font-size:.82rem;font-weight:600;color:#92400e;"></div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">💰 Base Price per Seat (₹)</label>
+            <input type="number" class="form-input" id="price" min="0" placeholder="e.g. 800" style="max-width:240px;">
+            <small class="form-help">Optional — sets a default for all seats on this route. You can fine-tune in the Pricing tab.</small>
+          </div>
+
+          <div id="schedule-pricing-preview" style="display:none;margin-bottom:1rem;"></div>
+          <div style="display:flex;gap:.75rem;flex-wrap:wrap;">
+            <button type="submit" class="btn btn-primary">💾 Save Schedule</button>
+            <button type="button" class="btn btn-secondary" onclick="resetScheduleForm()">🔄 Reset Form</button>
           </div>
         </form>
-
-        <div class="alert alert-info" style="margin-top:2rem;">
-          <h4>How Pricing Works:</h4>
-          <ul style="margin:0.5rem 0 0 1.5rem;">
-            <li><strong>Default Pricing:</strong> Applied to all routes without custom pricing</li>
-            <li><strong>Route-Specific Pricing:</strong> Override defaults per route</li>
-            <li><strong>Automatic Application:</strong> Applied when customers select seats</li>
-            <li><strong>Independent Zones:</strong> Each zone has a fixed price regardless of bus type</li>
-          </ul>
-        </div>
       </div>
-
-      <!-- Tab: Bus Lists -->
-      <div id="tab-buslists" class="admin-tab-content">
-        <div class="tab-header">
-          <h2>🚌 Bus Lists</h2>
-          <p class="tab-description">Manage all buses — search, filter, and toggle active status for recurring daily schedules.</p>
-        </div>
-
-        <div class="card mb-4" style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap;">
-          <input type="text" class="form-input" id="buslist-search" placeholder="🔍 Search by bus name, route, type…" style="max-width:340px;" oninput="filterBusList()">
-          <select class="form-input" id="buslist-filter-type" style="max-width:220px;" onchange="filterBusList()">
-            <option value="">All Bus Types</option>
-            <option value="Sedan (4+1)">Sedan (4+1)</option>
-            <option value="SUV (6+1)">SUV (6+1)</option>
-          </select>
-          <button class="btn btn-outline" onclick="loadBusListTable()">🔄 Refresh</button>
-        </div>
-
-        <div class="table-container">
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Driver/Cab Name &amp; Type</th>
-                <th>Route</th>
-                <th>Pickup / Drop</th>
-                <th>Schedule</th>
-                <th>Duration</th>
-                <th>Price</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="buslist-table-body"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Tab: Coupons -->
-      <div id="tab-coupons" class="admin-tab-content">
-        <div class="tab-header">
-          <h2>🎟️ Coupons</h2>
-          <p class="tab-description">Create and manage discount coupons for passengers.</p>
-        </div>
-
-        <div class="card mb-8">
-          <h3 class="summary-title" id="coupon-form-title">➕ Add New Coupon</h3>
-          <form id="coupon-form">
-            <input type="hidden" id="coupon-id">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
-              <div class="form-group">
-                <label class="form-label">🏷️ Coupon Code <span class="required">*</span></label>
-                <input type="text" class="form-input" id="coupon-code" placeholder="e.g. SAVE200" required style="text-transform:uppercase;">
-                <small class="text-muted">Users will enter this code at checkout</small>
-              </div>
-              <div class="form-group">
-                <label class="form-label">📝 Description</label>
-                <input type="text" class="form-input" id="coupon-description" placeholder="e.g. Flat ₹200 off on all routes">
-              </div>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;">
-              <div class="form-group">
-                <label class="form-label">💸 Discount Type <span class="required">*</span></label>
-                <select class="form-input" id="coupon-type" required onchange="updateCouponPreview()">
-                  <option value="flat">Flat Amount (₹)</option>
-                  <option value="percentage">Percentage (%)</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label class="form-label">🔢 Discount Value <span class="required">*</span></label>
-                <input type="number" class="form-input" id="coupon-value" placeholder="e.g. 200" min="0" required oninput="updateCouponPreview()">
-              </div>
-              <div class="form-group">
-                <label class="form-label">🔁 Max Usage</label>
-                <input type="number" class="form-input" id="coupon-max-usage" placeholder="Leave blank for unlimited" min="1">
-              </div>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
-              <div class="form-group">
-                <label class="form-label">📅 Valid From <span class="required">*</span></label>
-                <input type="date" class="form-input" id="coupon-start" required>
-              </div>
-              <div class="form-group">
-                <label class="form-label">📅 Valid Until <span class="required">*</span></label>
-                <input type="date" class="form-input" id="coupon-end" required>
-              </div>
-            </div>
-            <div id="coupon-preview" style="padding:1rem;background:#f0fdf4;border-radius:8px;margin-bottom:1rem;font-size:0.9rem;color:#166534;display:none;"></div>
-            <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
-              <button type="submit" class="btn btn-primary">💾 Save Coupon</button>
-              <button type="button" class="btn btn-secondary" onclick="resetCouponForm()">🔄 Reset</button>
-            </div>
-          </form>
-        </div>
-
-        <div class="table-container">
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Code</th><th>Description</th><th>Discount</th><th>Valid Period</th><th>Usage</th><th>Status</th><th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="coupons-table-body"></tbody>
-          </table>
-        </div>
-      </div>
-
-    </div><!-- /container -->
-  </div><!-- /admin-page-content -->
-
-  <!-- Scripts -->
-  <script src="js/data.js"></script>
-  <script src="js/main.js"></script>
-  <script src="js/admin.js"></script>
-
-  <!-- ======== DELETE/CANCEL BUS DIALOG ======== -->
-  <div id="bus-cancel-dialog" style="display:none;position:fixed;inset:0;z-index:99998;background:rgba(15,23,42,0.6);backdrop-filter:blur(4px);align-items:center;justify-content:center;">
-    <div style="background:white;border-radius:16px;padding:2rem;max-width:500px;width:90%;box-shadow:0 24px 64px rgba(0,0,0,0.3);max-height:85vh;overflow-y:auto;">
-      <h3 style="font-size:1.1rem;font-weight:700;color:#1e293b;margin-bottom:0.4rem;">🚌 Delete Bus Route</h3>
-      <p id="bus-cancel-dialog-name" style="font-size:0.88rem;color:#6b7280;margin-bottom:1.5rem;"></p>
-      <div style="display:flex;flex-direction:column;gap:0.75rem;">
-        <button onclick="busDeleteAction('delete-all')" style="text-align:left;padding:1rem 1.25rem;border:2px solid #fee2e2;border-radius:10px;background:#fff5f5;cursor:pointer;width:100%;">
-          <div style="font-weight:700;color:#dc2626;margin-bottom:0.2rem;">🗑️ Delete All Dates &amp; Remove Route Completely</div>
-          <div style="font-size:0.8rem;color:#6b7280;">Permanently removes this bus route and ALL its scheduled dates. Cannot be undone.</div>
-        </button>
-        <button onclick="busDeleteAction('delete-specific')" style="text-align:left;padding:1rem 1.25rem;border:2px solid #fef3c7;border-radius:10px;background:#fffdf0;cursor:pointer;width:100%;">
-          <div style="font-weight:700;color:#d97706;margin-bottom:0.2rem;">📅 Delete Specific Dates</div>
-          <div style="font-size:0.8rem;color:#6b7280;">Choose individual dates to remove — the rest of the route stays active.</div>
-        </button>
-      </div>
-      <div id="cancel-dates-panel" style="display:none;margin-top:1.25rem;border-top:2px solid #e5e7eb;padding-top:1rem;">
-        <p style="font-size:0.85rem;font-weight:700;color:#374151;margin-bottom:0.75rem;">📋 Scheduled Dates — click Delete to remove individually:</p>
-        <div id="cancel-dates-list" style="display:flex;flex-direction:column;gap:0;max-height:280px;overflow-y:auto;"></div>
-        <button onclick="document.getElementById('cancel-dates-panel').style.display='none'" style="margin-top:0.75rem;width:100%;padding:0.5rem;border:1px solid #e5e7eb;border-radius:8px;background:white;cursor:pointer;color:#6b7280;font-size:0.82rem;">← Back to options</button>
-      </div>
-      <button onclick="closeBusCancelDialog()" style="margin-top:1rem;width:100%;padding:0.6rem;border:1px solid #e5e7eb;border-radius:8px;background:white;cursor:pointer;color:#6b7280;font-size:0.875rem;">✕ Close</button>
     </div>
-  </div>
 
+    <!-- TAB: BOOKINGS -->
+    <div id="tab-bookings" class="admin-tab-content">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;margin-bottom:1.25rem;">
+        <div>
+          <h3 style="font-size:1.1rem;font-weight:700;color:#1e293b;margin:0;">🎫 All Cab Bookings</h3>
+          <p style="color:#94a3b8;font-size:.8rem;margin:.25rem 0 0;">Confirmed and cancelled seat bookings across all cab routes</p>
+        </div>
+        <button class="btn btn-success" onclick="openExportModal()">📥 Download Excel</button>
+      </div>
+      <div class="table-container">
+        <table class="table">
+          <thead><tr><th>Token</th><th>Passenger</th><th>Contact</th><th>Cab / Route</th><th>Travel Date</th><th>Seats</th><th>Amount</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody id="bookings-table-body"></tbody>
+        </table>
+      </div>
+    </div>
 
-  <!-- ══════════════════════════════════════
-       EDIT SCHEDULE MODAL
-  ══════════════════════════════════════ -->
-  <div id="edit-schedule-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;align-items:center;justify-content:center;padding:1rem;overflow-y:auto;">
-    <div style="background:#fff;border-radius:16px;padding:2rem;width:100%;max-width:640px;max-height:90vh;overflow-y:auto;position:relative;box-shadow:0 20px 60px rgba(0,0,0,0.25);">
-
-      <!-- Header -->
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;">
-        <h3 style="font-size:1.2rem;font-weight:700;color:#1e293b;margin:0;">✏️ Edit Schedule</h3>
-        <button onclick="closeEditModal()" style="background:none;border:none;cursor:pointer;font-size:1.4rem;color:#6b7280;line-height:1;">&times;</button>
+    <!-- TAB: PRICING -->
+    <div id="tab-pricing" class="admin-tab-content">
+      <div style="margin-bottom:1.5rem;">
+        <h2 style="font-size:1.4rem;font-weight:700;color:#1e293b;margin-bottom:.25rem;">💰 Seat Pricing Configuration</h2>
+        <p style="color:#64748b;font-size:.9rem;">Set per-seat pricing per route. Front seat (F1) and rear seats (R1–R5) can have different prices.</p>
       </div>
 
-      <form id="edit-schedule-form" onsubmit="saveEditModal(event)">
-        <input type="hidden" id="edit-schedule-id">
+      <div class="card" style="margin-bottom:1.5rem;">
+        <div class="card-hdr-amber">
+          <div style="font-size:1rem;font-weight:700;color:#92400e;">🛣️ Select Route to Configure</div>
+          <div style="font-size:.8rem;color:#a16207;margin-top:.2rem;">Routes marked ⭐ already have custom pricing set</div>
+        </div>
+        <div class="form-group" style="margin-bottom:.5rem;">
+          <label class="form-label">Cab Route</label>
+          <select id="route-selector"><option value="">Select a route…</option></select>
+          <small class="form-help">Select a route to view and edit its per-seat pricing</small>
+        </div>
+        <div id="pricing-status" style="margin-top:.75rem;">
+          <div class="alert alert-secondary"><strong>Select a route</strong> to configure pricing.</div>
+        </div>
+      </div>
 
-        <!-- Bus Type -->
-        <div class="form-group">
-          <label class="form-label">🚌 Bus Type</label>
-          <select class="form-input" id="edit-bus-type" required>
-            <option value="Sedan (4+1)">Sedan (4+1) — 4 Passenger Seats</option>
-            <option value="SUV (6+1)">SUV (6+1) — 6 Passenger Seats</option>
-          </select>
+      <form id="pricing-form">
+        <div class="card" style="margin-bottom:1.5rem;border-left:4px solid #0ea5e9;">
+          <div class="card-hdr-blue">
+            <div style="font-size:1rem;font-weight:700;color:#1d4ed8;">🪑 Section 1 — Default Seat Prices</div>
+            <div style="font-size:.8rem;color:#3b82f6;margin-top:.2rem;">Set a default price for front and rear seats. Per-seat overrides in Section 2 take priority.</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+            <div class="pricing-card pricing-card-front">
+              <div class="pricing-card-header"><span class="pricing-icon">🪑</span><h4>Front Seat (F1)</h4></div>
+              <label style="display:block;font-size:.8rem;font-weight:600;color:#374151;margin-bottom:.5rem;">Default price (₹)</label>
+              <input type="number" id="lower-deck-price" class="pricing-input" min="0" step="1" required placeholder="600" oninput="updateDeckPricePreview()">
+              <small class="pricing-help">Applies to the front passenger seat (F1) next to the driver.</small>
+            </div>
+            <div class="pricing-card pricing-card-rear">
+              <div class="pricing-card-header"><span class="pricing-icon">💺</span><h4>Rear Seats (R1–R5)</h4></div>
+              <label style="display:block;font-size:.8rem;font-weight:600;color:#374151;margin-bottom:.5rem;">Default price (₹)</label>
+              <input type="number" id="upper-deck-price" class="pricing-input" min="0" step="1" required placeholder="500" oninput="updateDeckPricePreview()">
+              <small class="pricing-help">Applies to all rear seats (R1–R3 for Sedan · R1–R5 for SUV).</small>
+            </div>
+          </div>
+          <div id="pricing-preview" class="pricing-preview" style="margin-top:1.25rem;"></div>
         </div>
 
-        <!-- Origin & Destination -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
-          <div class="form-group">
-            <label class="form-label">🏙️ Origin City</label>
-            <input type="text" class="form-input" id="edit-origin" placeholder="e.g. Dehradun" required>
+        <div class="card" style="margin-bottom:1.5rem;border-left:4px solid var(--amber);">
+          <div class="card-hdr-amber">
+            <div style="font-size:1rem;font-weight:700;color:#92400e;">🗺️ Section 2 — Per-Seat Price Override</div>
+            <div style="font-size:.8rem;color:#a16207;margin-top:.2rem;">Optionally set individual prices for specific seats. Leave blank to use Section 1 defaults.</div>
           </div>
-          <div class="form-group">
-            <label class="form-label">🏙️ Destination City</label>
-            <input type="text" class="form-input" id="edit-destination" placeholder="e.g. Delhi" required>
+          <div id="per-seat-map-container">
+            <p style="color:#94a3b8;text-align:center;padding:2rem 0;">Select a route above to see the seat map.</p>
           </div>
         </div>
 
-        <!-- Pickup & Drop -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
-          <div class="form-group">
-            <label class="form-label">📍 Pick Up Point</label>
-            <input type="text" class="form-input" id="edit-pickup-point" placeholder="e.g. ISBT Dehradun, Gate 3">
-          </div>
-          <div class="form-group">
-            <label class="form-label">📍 Drop Point</label>
-            <input type="text" class="form-input" id="edit-drop-point" placeholder="e.g. Kashmere Gate ISBT">
-          </div>
-        </div>
-
-        <!-- Departure Date & Time -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
-          <div class="form-group">
-            <label class="form-label">📅 Departure Date</label>
-            <input type="date" class="form-input" id="edit-departure-date" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label">🕐 Departure Time</label>
-            <input type="time" class="form-input" id="edit-departure-time" required>
-          </div>
-        </div>
-
-        <!-- Duration -->
-        <div class="form-group">
-          <label class="form-label">⏱️ Duration</label>
-          <div style="display:flex;gap:0.5rem;align-items:center;">
-            <input type="number" class="form-input" id="edit-duration-hours" placeholder="Hrs" min="0" max="72" style="width:50%;">
-            <input type="number" class="form-input" id="edit-duration-minutes" placeholder="Min" min="0" max="59" style="width:50%;">
-          </div>
-          <small class="text-muted">Hours &amp; Minutes</small>
-        </div>
-
-        <!-- Price -->
-        <div class="form-group">
-          <label class="form-label">💰 Base Price (₹)</label>
-          <input type="number" class="form-input" id="edit-price" min="0" placeholder="e.g. 1200">
-        </div>
-
-        <!-- Actions -->
-        <div style="display:flex;gap:0.75rem;justify-content:flex-end;margin-top:1.25rem;">
-          <button type="button" class="btn btn-outline" onclick="closeEditModal()">Cancel</button>
-          <button type="submit" class="btn btn-primary">💾 Save Changes</button>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">💾 Save Pricing</button>
+          <button type="button" class="btn btn-secondary" onclick="resetAllPricing()">🔄 Reset All to Defaults</button>
+          <button type="button" class="btn btn-outline" onclick="resetRoutePricing()" id="reset-route-btn" style="display:none;">↩️ Reset This Route</button>
         </div>
       </form>
+
+      <div class="alert alert-info" style="margin-top:1.5rem;">
+        <strong>💡 How Taxi Seat Pricing Works:</strong>
+        <ul style="margin:.5rem 0 0 1.25rem;line-height:1.9;">
+          <li><strong>Front Seat (F1)</strong> — sits beside the driver. Usually set higher as a premium position.</li>
+          <li><strong>Rear Seats (R1–R3 Sedan / R1–R5 SUV)</strong> — standard shared passenger seats.</li>
+          <li><strong>Section 2 per-seat overrides</strong> always win over Section 1 defaults.</li>
+          <li>Each route can have completely independent pricing.</li>
+        </ul>
+      </div>
     </div>
+
+    <!-- TAB: CAB LIST -->
+    <div id="tab-cablists" class="admin-tab-content">
+      <div style="margin-bottom:1.5rem;">
+        <h2 style="font-size:1.4rem;font-weight:700;color:#1e293b;margin-bottom:.25rem;">🚖 Cab Schedule List</h2>
+        <p style="color:#64748b;font-size:.9rem;">All scheduled cab routes — search, filter, edit or delete.</p>
+      </div>
+      <div class="card" style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap;padding:1rem 1.5rem;">
+        <input type="text" class="form-input" id="buslist-search" placeholder="🔍 Search by route, city or cab type…" style="max-width:300px;margin:0;" oninput="filterBusList()">
+        <select class="form-input" id="buslist-filter-type" style="max-width:200px;margin:0;" onchange="filterBusList()">
+          <option value="">All Cab Types</option>
+          <option value="Sedan (4+1)">🚗 Sedan (4+1)</option>
+          <option value="SUV (6+1)">🚙 SUV (6+1)</option>
+        </select>
+        <button class="btn btn-outline" onclick="loadBusListTable()">🔄 Refresh</button>
+      </div>
+      <div class="table-container">
+        <table class="table">
+          <thead><tr><th>Cab / Driver</th><th>Route</th><th>Pickup / Drop</th><th>Schedule</th><th>Duration</th><th>Price</th><th>Actions</th></tr></thead>
+          <tbody id="buslist-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB: COUPONS -->
+    <div id="tab-coupons" class="admin-tab-content">
+      <div style="margin-bottom:1.5rem;">
+        <h2 style="font-size:1.4rem;font-weight:700;color:#1e293b;margin-bottom:.25rem;">🎟️ Discount Coupons</h2>
+        <p style="color:#64748b;font-size:.9rem;">Create and manage promotional coupon codes for passengers.</p>
+      </div>
+      <div class="card">
+        <div class="card-hdr-amber">
+          <div style="font-size:1.05rem;font-weight:700;color:#92400e;" id="coupon-form-title">➕ Create New Coupon</div>
+          <div style="font-size:.8rem;color:#a16207;margin-top:.2rem;">Coupons are applied at checkout before payment</div>
+        </div>
+        <form id="coupon-form">
+          <input type="hidden" id="coupon-id">
+          <div class="form-row form-row-2">
+            <div class="form-group">
+              <label class="form-label">🏷️ Coupon Code <span class="required">*</span></label>
+              <input type="text" class="form-input" id="coupon-code" placeholder="e.g. RIDE200" required style="text-transform:uppercase;font-weight:700;letter-spacing:.1em;">
+              <small class="form-help">Passengers type this at checkout</small>
+            </div>
+            <div class="form-group">
+              <label class="form-label">📝 Description</label>
+              <input type="text" class="form-input" id="coupon-description" placeholder="e.g. Flat ₹200 off all cab rides">
+            </div>
+          </div>
+          <div class="form-row form-row-3">
+            <div class="form-group">
+              <label class="form-label">💸 Discount Type <span class="required">*</span></label>
+              <select class="form-input" id="coupon-type" required onchange="updateCouponPreview()">
+                <option value="flat">Flat Amount (₹)</option>
+                <option value="percentage">Percentage (%)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">🔢 Discount Value <span class="required">*</span></label>
+              <input type="number" class="form-input" id="coupon-value" placeholder="e.g. 200" min="0" required oninput="updateCouponPreview()">
+            </div>
+            <div class="form-group">
+              <label class="form-label">🔁 Max Usage</label>
+              <input type="number" class="form-input" id="coupon-max-usage" placeholder="Unlimited" min="1">
+            </div>
+          </div>
+          <div class="form-row form-row-2">
+            <div class="form-group">
+              <label class="form-label">📅 Valid From <span class="required">*</span></label>
+              <input type="date" class="form-input" id="coupon-start" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">📅 Valid Until <span class="required">*</span></label>
+              <input type="date" class="form-input" id="coupon-end" required>
+            </div>
+          </div>
+          <div id="coupon-preview" style="padding:1rem;background:#f0fdf4;border-radius:.75rem;margin-bottom:1rem;font-size:.9rem;color:#166534;display:none;border:1px solid #bbf7d0;"></div>
+          <div style="display:flex;gap:.75rem;flex-wrap:wrap;">
+            <button type="submit" class="btn btn-primary">💾 Save Coupon</button>
+            <button type="button" class="btn btn-secondary" onclick="resetCouponForm()">🔄 Reset</button>
+          </div>
+        </form>
+      </div>
+      <div class="table-container">
+        <table class="table">
+          <thead><tr><th>Code</th><th>Description</th><th>Discount</th><th>Valid Period</th><th>Usage</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="coupons-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /container -->
+</div><!-- /admin-page-content -->
+
+<script src="js/data.js"></script>
+<script src="js/main.js"></script>
+<script src="js/admin.js"></script>
+
+<script>
+  /* Cab type visual card sync */
+  function selectCabType(val) {
+    document.getElementById('bus-type').value = val;
+    var isSedan = val === 'Sedan (4+1)';
+    var sedan = document.getElementById('lbl-sedan');
+    var suv   = document.getElementById('lbl-suv');
+    if (sedan) { sedan.style.borderColor = isSedan ? 'var(--amber)' : '#e2e8f0'; sedan.style.background = isSedan ? '#fffbeb' : '#fff'; }
+    if (suv)   { suv.style.borderColor   = isSedan ? '#e2e8f0' : 'var(--amber)'; suv.style.background   = isSedan ? '#fff' : '#fffbeb'; }
+    document.querySelector('input[name="cab-type-vis"][value="'+val+'"]').checked = true;
+  }
+  document.addEventListener('DOMContentLoaded', function(){ selectCabType('Sedan (4+1)'); });
+</script>
+
+<!-- DELETE CAB DIALOG -->
+<div id="bus-cancel-dialog" style="display:none;position:fixed;inset:0;z-index:99998;background:rgba(15,23,42,.65);backdrop-filter:blur(4px);align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:1rem;padding:2rem;max-width:500px;width:90%;box-shadow:0 24px 64px rgba(0,0,0,.3);max-height:85vh;overflow-y:auto;border-top:4px solid #ef4444;">
+    <h3 style="font-size:1.1rem;font-weight:700;color:#1e293b;margin-bottom:.4rem;">🗑️ Delete Cab Route</h3>
+    <p id="bus-cancel-dialog-name" style="font-size:.875rem;color:#64748b;margin-bottom:1.5rem;"></p>
+    <div style="display:flex;flex-direction:column;gap:.75rem;">
+      <button onclick="busDeleteAction('delete-all')" style="text-align:left;padding:1rem 1.25rem;border:2px solid #fee2e2;border-radius:.75rem;background:#fff5f5;cursor:pointer;width:100%;">
+        <div style="font-weight:700;color:#dc2626;margin-bottom:.2rem;">🗑️ Delete Route Completely</div>
+        <div style="font-size:.8rem;color:#6b7280;">Removes this cab route and ALL scheduled dates. Cannot be undone.</div>
+      </button>
+      <button onclick="busDeleteAction('delete-specific')" style="text-align:left;padding:1rem 1.25rem;border:2px solid #fef3c7;border-radius:.75rem;background:#fffdf0;cursor:pointer;width:100%;">
+        <div style="font-weight:700;color:#d97706;margin-bottom:.2rem;">📅 Delete Specific Dates Only</div>
+        <div style="font-size:.8rem;color:#6b7280;">Choose individual dates to remove. Route stays active for other dates.</div>
+      </button>
+    </div>
+    <div id="cancel-dates-panel" style="display:none;margin-top:1.25rem;border-top:2px solid #e2e8f0;padding-top:1rem;">
+      <p style="font-size:.85rem;font-weight:700;color:#374151;margin-bottom:.75rem;">📋 Scheduled Dates — click Delete to remove individually:</p>
+      <div id="cancel-dates-list" style="display:flex;flex-direction:column;gap:0;max-height:280px;overflow-y:auto;"></div>
+      <button onclick="document.getElementById('cancel-dates-panel').style.display='none'" style="margin-top:.75rem;width:100%;padding:.5rem;border:1px solid #e2e8f0;border-radius:.5rem;background:#fff;cursor:pointer;color:#64748b;font-size:.82rem;">← Back</button>
+    </div>
+    <button onclick="closeBusCancelDialog()" style="margin-top:1rem;width:100%;padding:.6rem;border:1px solid #e2e8f0;border-radius:.75rem;background:#fff;cursor:pointer;color:#64748b;font-size:.875rem;">✕ Close</button>
   </div>
+</div>
+
+<!-- EDIT SCHEDULE MODAL -->
+<div id="edit-schedule-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;align-items:center;justify-content:center;padding:1rem;overflow-y:auto;">
+  <div style="background:#fff;border-radius:1rem;padding:2rem;width:100%;max-width:640px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);border-top:4px solid var(--amber);">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;">
+      <div>
+        <h3 style="font-size:1.2rem;font-weight:700;color:#1e293b;margin:0;">✏️ Edit Cab Schedule</h3>
+        <p style="color:#94a3b8;font-size:.8rem;margin:.25rem 0 0;">Update the details for this scheduled cab trip</p>
+      </div>
+      <button onclick="closeEditModal()" style="background:none;border:none;cursor:pointer;font-size:1.5rem;color:#94a3b8;line-height:1;">&times;</button>
+    </div>
+    <form id="edit-schedule-form" onsubmit="saveEditModal(event)">
+      <input type="hidden" id="edit-schedule-id">
+      <div class="form-group">
+        <label class="form-label">🚗 Cab Type</label>
+        <select class="form-input" id="edit-bus-type" required>
+          <option value="Sedan (4+1)">🚗 Sedan (4+1) — 4 Passenger Seats</option>
+          <option value="SUV (6+1)">🚙 SUV (6+1) — 6 Passenger Seats</option>
+        </select>
+      </div>
+      <div class="form-row form-row-2">
+        <div class="form-group"><label class="form-label">🏙️ Origin City</label><input type="text" class="form-input" id="edit-origin" placeholder="e.g. Dehradun" required></div>
+        <div class="form-group"><label class="form-label">🏙️ Destination City</label><input type="text" class="form-input" id="edit-destination" placeholder="e.g. Delhi" required></div>
+      </div>
+      <div class="form-row form-row-2">
+        <div class="form-group"><label class="form-label">📍 Pickup Point</label><input type="text" class="form-input" id="edit-pickup-point" placeholder="e.g. ISBT Dehradun"></div>
+        <div class="form-group"><label class="form-label">📍 Drop Point</label><input type="text" class="form-input" id="edit-drop-point" placeholder="e.g. Kashmere Gate"></div>
+      </div>
+      <div class="form-row form-row-2">
+        <div class="form-group"><label class="form-label">📅 Departure Date</label><input type="date" class="form-input" id="edit-departure-date" required></div>
+        <div class="form-group"><label class="form-label">🕐 Departure Time</label><input type="time" class="form-input" id="edit-departure-time" required></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">⏱️ Duration</label>
+        <div style="display:flex;gap:.5rem;">
+          <input type="number" class="form-input" id="edit-duration-hours" placeholder="Hours" min="0" max="72" style="flex:1;">
+          <input type="number" class="form-input" id="edit-duration-minutes" placeholder="Mins" min="0" max="59" style="flex:1;">
+        </div>
+      </div>
+      <div class="form-group"><label class="form-label">💰 Base Price (₹)</label><input type="number" class="form-input" id="edit-price" min="0" placeholder="e.g. 800"></div>
+      <div style="display:flex;gap:.75rem;justify-content:flex-end;margin-top:1.25rem;">
+        <button type="button" class="btn btn-outline" onclick="closeEditModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">💾 Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
 
 </body>
 </html>
