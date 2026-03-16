@@ -3,7 +3,7 @@
 // Cab Types: Sedan (4+1) | SUV (6+1)
 // ========================================
 
-const API_BASE_URL = 'https://srt-backend-a5m9.onrender.com/api';
+const API_BASE_URL = 'https://taxi-backend-w16o.onrender.com/api';
 
 const CAB_TYPE_SEDAN = 'Sedan (4+1)';
 const CAB_TYPE_SUV   = 'SUV (6+1)';
