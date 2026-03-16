@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment - Shree Ram Taxi</title>
+  <link rel="icon" href="assets/icons/favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/tailwind.css">
+
+  <!-- Cashfree JS SDK (test + production unified) -->
+  <script src="https://sdk.cashfree.com/js/v3/cashfree.js"></script>
+  <style>
+    @keyframes priceStrike { from { width:0 } to { width:100% } }
+    @keyframes bounce { 0%,100% { transform:scale(1) } 50% { transform:scale(1.08) } }
+    @keyframes fadeInDown { from { opacity:0; transform:translateY(-10px) } to { opacity:1; transform:translateY(0) } }
+    .price-strike-wrap { position:relative; display:inline-block; }
+    .price-strike-line { position:absolute; top:50%; left:0; height:2px; background:#ef4444;
+      width:0; animation:priceStrike 0.5s ease-out 0.2s forwards; }
+    .savings-badge { display:inline-block; background:linear-gradient(135deg,#10b981,#059669);
+      color:white; padding:0.5rem 1rem; border-radius:24px; font-weight:700; font-size:0.9rem;
+      margin-top:0.5rem; animation:fadeInDown 0.4s ease 0.7s both, bounce 0.6s ease 1.1s; }
+    .coupon-success { background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px;
+      padding:0.75rem; color:#166534; font-size:0.85rem; animation:fadeInDown 0.3s ease; }
+    .coupon-error { background:#fef2f2; border:1px solid #fecaca; border-radius:8px;
+      padding:0.75rem; color:#dc2626; font-size:0.85rem; }
+  </style>
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav class="navbar no-print">
+    <div class="container">
+      <div class="nav-content">
+        <a href="index.html" class="nav-brand">
+          <img src="assets/icons/shree-ram-logo.png" alt="Shree Ram Taxi" style="height:44px;"> <span style="color:#fff;font-family:Poppins,sans-serif;font-weight:700;font-size:1rem;">🚖 Shree Ram <span style="color:#f59e0b;">Taxi</span></span>
+        </a>
+        <button class="mobile-menu-btn" id="mobile-menu-btn">☰</button>
+        <ul class="nav-links" id="mobile-menu">
+          <li><a href="index.html"   class="nav-link">Home</a></li>
+          <li><a href="timings.html" class="nav-link">Cab Schedules</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="payment-container">
+
+    <!-- ── Payment Form (shown before payment) ── -->
+    <div id="payment-form-container">
+      <h1 style="font-size:2rem;font-weight:700;margin-bottom:2rem;text-align:center;">
+        Complete Your Booking
+      </h1>
+
+      <div class="payment-grid">
+
+        <!-- Passenger Details -->
+        <div>
+          <div class="card">
+            <h3 class="summary-title">Passenger Details</h3>
+            <form id="payment-form">
+
+              <div class="form-group">
+                <label class="form-label">Full Name *</label>
+                <input type="text" class="form-input" id="name"
+                       placeholder="Enter your full name" required>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Email Address *</label>
+                <input type="email" class="form-input" id="email"
+                       placeholder="your@email.com" required>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Phone Number *</label>
+                <input type="tel" class="form-input" id="phone"
+                       placeholder="10-digit mobile number" required maxlength="10">
+              </div>
+
+              <!-- Cashfree secure payment badge -->
+              <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:1rem;padding:0.75rem;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;font-size:0.8rem;color:#166534;">
+                🔒 Payments secured by <strong>Cashfree</strong> – 256-bit SSL encrypted
+              </div>
+
+              <!-- Coupon Code Section -->
+              <div id="coupon-section" style="margin-bottom:1rem;padding:1rem;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;">
+                <label style="font-size:0.85rem;font-weight:600;color:#92400e;display:block;margin-bottom:0.5rem;">🎟️ Have a coupon code?</label>
+                <div style="display:flex;gap:0.5rem;">
+                  <input type="text" id="coupon-input" class="form-input" placeholder="Enter coupon code" style="text-transform:uppercase;flex:1;letter-spacing:1px;">
+                  <button type="button" class="btn btn-outline" id="apply-coupon-btn" onclick="applyCoupon()" style="white-space:nowrap;background:#f59e0b;color:white;border-color:#f59e0b;">Apply</button>
+                </div>
+                <div id="coupon-result" style="margin-top:0.5rem;"></div>
+              </div>
+
+              <button type="submit" class="btn btn-primary btn-lg btn-block" id="pay-btn">
+                Pay Now →
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Booking Summary (populated by JS) -->
+        <div id="booking-summary-section"></div>
+
+      </div>
+    </div>
+
+    <!-- ── Confirmation / Result (hidden until payment returns) ── -->
+    <div id="confirmation-container" style="display:none;max-width:680px;margin:3rem auto;">
+      <!-- Populated by payment.js -->
+    </div>
+
+  </div><!-- /payment-container -->
+
+  <!-- Scripts -->
+  <script src="js/data.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/payment.js"></script>
+
+</body>
+</html>
